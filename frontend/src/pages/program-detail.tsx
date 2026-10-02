@@ -53,7 +53,7 @@ function ProgramDossierView({ id }: { id: string }) {
     <main className="ledger-section">
       <header className="page-head">
         <div>
-          <p className="eyebrow">PROGRAM / SL-P{item.id}</p>
+          <p className="eyebrow">PROGRAM / BB-P{item.id}</p>
           <h1>{String(item.name)}</h1>
           <p className="meta-line">
             <a href={String(item.repository_url)} target="_blank" rel="noreferrer">{String(item.repository_url)}</a>
@@ -84,7 +84,7 @@ function ProgramDossierView({ id }: { id: string }) {
         <section className="detail-row">
           <b>05 / Disclosures</b>
           <span>{items.length} loaded / {String(item.report_count)} total<br />
-            {items.map((r) => <Link key={String(r.id)} to={`/disclosures/${r.id}`}>SL-{String(r.id)} {String(r.title)}<br /></Link>)}
+            {items.map((r) => <Link key={String(r.id)} to={`/disclosures/${r.id}`}>BB-{String(r.id)} {String(r.title)}<br /></Link>)}
           </span>
         </section>
         <section className="detail-row">

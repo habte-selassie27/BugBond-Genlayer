@@ -73,7 +73,7 @@ export default function Disclosures() {
               ))}
               {visible.map((r) => (
                 <Link to={`/disclosures/${r.id}`} className="row" key={String(r.id)}>
-                  <b>SL-{r.id}</b>
+                  <b>BB-{r.id}</b>
                   <span>{badge(severityTone(severity(r)), severity(r))}</span>
                   <span className="cell-muted">{String(r.component)}</span>
                   <span>{badge(tone(r.status), String(r.verdict || reportStatus(r.status)))}</span>

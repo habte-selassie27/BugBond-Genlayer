@@ -59,7 +59,7 @@ export default function Precedent() {
               ))}
               {items.map((r) => (
                 <Link to={`/disclosures/${r.id}`} className="row" key={String(r.id)}>
-                  <b>SL-{String(r.id)}</b>
+                  <b>BB-{String(r.id)}</b>
                   <span>{badge(severityTone(severity(r)), severity(r))} <span className="cell-muted">{String(r.component)}</span></span>
                   <span className="cell-muted">{String(r.synopsis)}</span>
                 </Link>

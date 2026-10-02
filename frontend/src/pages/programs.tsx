@@ -56,7 +56,7 @@ export default function Programs() {
               ))}
               {items.map((p) => (
                 <Link to={`/programs/${p.id}`} className="row" key={String(p.id)}>
-                  <b>SL-P{p.id}</b>
+                  <b>BB-P{p.id}</b>
                   <span className="cell-muted">{String(p.repository_url).replace(/^https:\/\//, "")}</span>
                   <span>{badge(programTone(p.status), programStatus(p.status))}</span>
                   <span>{gen(p.remaining_pool)}</span>

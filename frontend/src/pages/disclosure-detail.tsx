@@ -52,7 +52,7 @@ function DisclosureDossierView({ id }: { id: string }) {
   return (
     <main className="rail-section">
       <div>
-        <p className="eyebrow">DISCLOSURE DOSSIER / SL-{String(item.id)}</p>
+        <p className="eyebrow">DISCLOSURE DOSSIER / BB-{String(item.id)}</p>
         <h1>{String(item.title)}</h1>
         <p className="meta-line">
           <span className={statusTone ? `badge badge--${statusTone}` : "badge"}>{reportStatus(item.status)}</span>
@@ -65,7 +65,7 @@ function DisclosureDossierView({ id }: { id: string }) {
       <ol className="rail">
         <li>
           <time>01</time><b>TARGET</b>
-          <small><Link to={`/programs/${item.program_id}`}>Program SL-P{String(item.program_id)}</Link> · {String(item.component)}</small>
+          <small><Link to={`/programs/${item.program_id}`}>Program BB-P{String(item.program_id)}</Link> · {String(item.component)}</small>
         </li>
         <li>
           <time>02</time><b>DISCLOSURE</b>

@@ -75,7 +75,7 @@ export default function Settlements() {
               ))}
               {visible.map((r) => (
                 <Link to={`/disclosures/${r.id}`} className="row" key={String(r.id)}>
-                  <b>SL-{String(r.id)}</b>
+                  <b>BB-{String(r.id)}</b>
                   <span>{badge(tone(r.status), String(r.verdict || reportStatus(r.status)))}</span>
                   <span className="cell-muted">
                     {severity(r) === "NONE" ? null : <>{severity(r)} · </>}payout {gen(r.payout)} · refund {gen(r.refund)} · slash {gen(r.slash)}
