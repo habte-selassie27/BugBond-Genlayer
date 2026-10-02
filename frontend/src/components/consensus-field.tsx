@@ -3,6 +3,32 @@ import { useEffect, useRef } from "react";
 const NODE_COUNT = 190;
 const LINK_DISTANCE = 168;
 
+type Rgb = [number, number, number];
+
+/* Reads a custom property off :root and parses it to RGB, so the field inherits
+   the active theme's palette instead of hardcoding one. */
+function cssColor(name: string, fallback: Rgb): Rgb {
+  if (typeof window === "undefined") return fallback;
+  const raw = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  if (!raw) return fallback;
+
+  const hex = raw.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hex) {
+    const digits = hex[1].length === 3 ? hex[1].split("").map((c) => c + c).join("") : hex[1];
+    return [parseInt(digits.slice(0, 2), 16), parseInt(digits.slice(2, 4), 16), parseInt(digits.slice(4, 6), 16)];
+  }
+
+  const fn = raw.match(/^rgba?\(([^)]+)\)$/i);
+  if (fn) {
+    const channels = fn[1].split(",").map((part) => parseFloat(part));
+    if (channels.length >= 3 && channels.slice(0, 3).every((n) => Number.isFinite(n))) {
+      return [channels[0], channels[1], channels[2]];
+    }
+  }
+
+  return fallback;
+}
+
 export function ConsensusField() {
   const host = useRef<HTMLDivElement>(null);
 
@@ -49,8 +75,11 @@ export function ConsensusField() {
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
+      const nodeColor = cssColor("--cyan", [79, 209, 197]);
+      const linkColor = cssColor("--line", [47, 111, 122]);
+
       const nodeMaterial = new THREE.PointsMaterial({
-        color: 0x4fd1c5,
+        color: new THREE.Color(nodeColor[0] / 255, nodeColor[1] / 255, nodeColor[2] / 255),
         size: 2.1,
         transparent: true,
         opacity: 0.72,
@@ -62,7 +91,11 @@ export function ConsensusField() {
       const linkPositions: number[] = [];
       const linkGeometry = new THREE.BufferGeometry();
       linkGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(linkPositions), 3));
-      const linkMaterial = new THREE.LineBasicMaterial({ color: 0x2f6f7a, transparent: true, opacity: 0.34 });
+      const linkMaterial = new THREE.LineBasicMaterial({
+        color: new THREE.Color(linkColor[0] / 255, linkColor[1] / 255, linkColor[2] / 255),
+        transparent: true,
+        opacity: 0.34,
+      });
       const links = new THREE.LineSegments(linkGeometry, linkMaterial);
       scene.add(links);
 

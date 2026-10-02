@@ -23,7 +23,7 @@ export default tseslint.config(
         "warn",
         {
           allowConstantExport: true,
-          allowExportNames: ["useWallet"],
+          allowExportNames: ["useWallet", "useTheme"],
         },
       ],
       "no-empty": ["error", { allowEmptyCatch: true }],
