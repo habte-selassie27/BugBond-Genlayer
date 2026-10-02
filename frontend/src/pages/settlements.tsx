@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { filterItems, gen, reports, reportStatus, severity, tone, type Report } from "@/lib/scope-data";
+import { useChainData } from "@/lib/use-chain-data";
 
 const final = (r: Report) => Number(r.status) >= 3;
 const OUTCOMES = ["ALL OUTCOMES", "VALID", "DUPLICATE", "KNOWN ISSUE", "OUT OF SCOPE", "EXPLOITABILITY NOT ESTABLISHED", "EXPIRED", "WITHDRAWN"] as const;
@@ -10,16 +11,9 @@ const badge = (t: string, label: string) => (
 );
 
 export default function Settlements() {
-  const [items, setItems] = useState<Report[]>([]);
-  const [state, setState] = useState("LOADING");
+  const { items, state, retry } = useChainData<Report>(() => reports().then((r) => r.filter(final)), []);
   const [query, setQuery] = useState("");
   const [outcome, setOutcome] = useState("");
-
-  useEffect(() => {
-    reports()
-      .then((r) => { const done = r.filter(final); setItems(done); setState(done.length ? "READY" : "EMPTY"); })
-      .catch(() => setState("RPC ERROR"));
-  }, []);
 
   const status = OUTCOME_STATUS[OUTCOMES.indexOf(outcome as typeof OUTCOMES[number])] ?? "";
   const visible = filterItems(items, query, status);
@@ -43,14 +37,15 @@ export default function Settlements() {
       {state === "RPC ERROR" ? (
         <div className="empty-ledger">
           <strong>RPC FAILURE</strong>
-          <p>Retry after checking StudioNet and the configured contract address.</p>
+          <p>The StudioNet endpoint did not answer. Reads are retried automatically; retry here once the network responds.</p>
+          <button className="connect" onClick={retry}>Retry chain read</button>
         </div>
       ) : state === "EMPTY" ? (
         <div className="empty-ledger">
           <strong>NO SETTLEMENTS YET</strong>
           <p>A report settles once consensus returns a terminal verdict and the deterministic payout rule runs.</p>
         </div>
-      ) : visible.length === 0 ? (
+      ) : state !== "LOADING" && visible.length === 0 ? (
         <div className="empty-ledger">
           <strong>NO MATCHING SETTLEMENTS</strong>
           <p>No settlement matches the current search and outcome filter.</p>
@@ -63,7 +58,7 @@ export default function Settlements() {
             {OUTCOMES.map((label) => <option key={label} value={label}>{label}</option>)}
           </select>
         </div>
-        <p className="ledger-count">Showing {visible.length} of {items.length} settlements</p>
+        {state === "LOADING" ? null : <p className="ledger-count">Showing {visible.length} of {items.length} settlements</p>}
         <div className="table table--settlements">
           <div className="table-inner">
             <div className="table-head" aria-hidden="true">

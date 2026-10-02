@@ -1,24 +1,17 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { gen, programs, programStatus, programTone, type Program } from "@/lib/scope-data";
+import { useChainData } from "@/lib/use-chain-data";
 
 const badge = (tone: string, label: string) => (
   <span className={tone ? `badge badge--${tone}` : "badge"}>{label}</span>
 );
 
 export default function Programs() {
-  const [items, setItems] = useState<Program[]>([]);
-  const [state, setState] = useState("LOADING");
-
-  useEffect(() => {
-    programs()
-      .then((x) => { setItems(x); setState(x.length ? "READY" : "EMPTY"); })
-      .catch(() => setState("RPC ERROR"));
-  }, []);
+  const { items, state, retry } = useChainData<Program>(programs, []);
 
   const lede =
     state === "LOADING" ? "Reading the StudioNet program index…"
-    : state === "RPC ERROR" ? "RPC failure. Check the selected network and contract configuration."
+    : state === "RPC ERROR" ? "RPC failure. Retry after checking StudioNet."
     : state === "EMPTY" ? "No funded scope has been locked on chain yet."
     : "Real Bugbond programs only. Every row is read from the deployed contract.";
 
@@ -36,7 +29,8 @@ export default function Programs() {
       {state === "RPC ERROR" ? (
         <div className="empty-ledger">
           <strong>RPC FAILURE</strong>
-          <p>Check the selected network and contract configuration, then reload the page.</p>
+          <p>The StudioNet endpoint did not answer. Reads are retried automatically; retry here once the network responds.</p>
+          <button className="connect" onClick={retry}>Retry chain read</button>
         </div>
       ) : state === "EMPTY" ? (
         <div className="empty-ledger">

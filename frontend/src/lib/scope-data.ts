@@ -1,26 +1,51 @@
 import { ensureContract, readClient } from "@/lib/genlayer";
+
+/* readContract expects its positional args array as a specific encodable union
+   that the SDK does not re-export, so derive it from the method signature. */
+type ReadArgs = Parameters<ReturnType<typeof readClient>["readContract"]>[0]["args"];
 export type Program=Record<string, string|number>; export type Report=Record<string,string|number>;
 
 const PAGE=50;
+const CONCURRENCY=8;
+
+// StudioNet answers with 429s at 300 req/min and the public endpoint drops
+// requests intermittently, so a single failed read must not surface as a
+// dead-end error: retry with backoff, and bound parallelism on big pages.
+async function withRetry<T>(run:()=>Promise<T>,attempts=5):Promise<T>{
+ let error:unknown;
+ for(let i=0;i<attempts;i++){
+  try{return await run();}
+  catch(e){error=e;if(i<attempts-1)await new Promise((resolve)=>setTimeout(resolve,500*(2**i)));}
+ }
+ throw error;
+}
+const read=<T>(functionName:string,args:ReadArgs)=>withRetry(()=>readClient().readContract({address:ensureContract(),functionName,args})as Promise<T>);
+async function mapLimit<T,R>(items:T[],limit:number,fn:(item:T)=>Promise<R>):Promise<R[]>{
+ const out=new Array<R>(items.length);let cursor=0;
+ await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{
+  while(cursor<items.length){const index=cursor++;out[index]=await fn(items[index]);}
+ }));
+ return out;
+}
 
 // The contract's list_*_id views are offset/limit paginated, so the UI has to
 // walk the cursor instead of reading a single hardcoded [0,50] window. Without
 // this, anything past 50 programs or reports was silently dropped.
-async function collect<T>(listFn:string, readFn:string, totalFn:string):Promise<T[]>{
- const client=readClient(); const out:T[]=[];
- const total=Number(await client.readContract({address:ensureContract(),functionName:totalFn,args:[]}) as number);
+async function collect<T>(listFn:string,readFn:string,totalFn:string):Promise<T[]>{
+ const out:T[]=[];
+ const total=Number(await read<number>(totalFn,[]));
  for(let offset=0;offset<total;offset+=PAGE){
-  const ids=(await client.readContract({address:ensureContract(),functionName:listFn,args:[offset,PAGE]}) as number[])||[];
+  const ids=(await read<number[]>(listFn,[offset,PAGE]))||[];
   if(!ids.length) break;
-  out.push(...await Promise.all(ids.map((id)=>client.readContract({address:ensureContract(),functionName:readFn,args:[id]}) as Promise<T>)));
+  out.push(...await mapLimit(ids,CONCURRENCY,(id)=>read<T>(readFn,[id])));
  }
  return out;
 }
 
 export async function programs(){return collect<Program>("list_program_ids","get_program","program_count");}
 export async function reports(){return collect<Report>("list_report_ids","get_report","report_count");}
-export async function program(id:string){return readClient().readContract({address:ensureContract(),functionName:"get_program",args:[BigInt(id)]}) as Promise<Program>}
-export async function report(id:string){return readClient().readContract({address:ensureContract(),functionName:"get_report",args:[BigInt(id)]}) as Promise<Report>}
+export const program=(id:string)=>read<Program>("get_program",[BigInt(id)]);
+export const report=(id:string)=>read<Report>("get_report",[BigInt(id)]);
 export const gen=(value: unknown)=>{try{return `${(BigInt(String(value))/1000000000000000000n).toString()} GEN`}catch{return "N/A"}};
 export const programStatus=(value:unknown)=>Number(value)===1?"OPEN":Number(value)===2?"PAUSED":"CLOSED";
 export const programTone=(value:unknown)=>Number(value)===1?"ok":Number(value)===2?"warn":"";

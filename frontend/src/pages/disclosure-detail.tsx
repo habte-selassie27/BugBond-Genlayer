@@ -11,20 +11,25 @@ export default function DisclosureDossier() {
 function DisclosureDossierView({ id }: { id: string }) {
   const [item, setItem] = useState<Report>();
   const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
   const apply = useCallback((record: Report) => { setItem(record); setError(""); }, []);
   const refresh = useCallback(async () => { if (!id) return; apply(await report(id)); }, [id, apply]);
 
   useEffect(() => {
     if (!id) return;
     report(id).then(apply, (e) => setError(e instanceof Error ? e.message : "Unable to read disclosure."));
-  }, [id, apply]);
+  }, [id, apply, attempt]);
 
   if (error) {
     return (
       <main className="ledger-section">
         <p className="eyebrow">DISCLOSURE DOSSIER</p>
         <h1>RPC unavailable.</h1>
-        <div className="empty-ledger"><strong>READ FAILED</strong><p>{error}</p></div>
+        <div className="empty-ledger">
+          <strong>READ FAILED</strong>
+          <p>{error}</p>
+          <button className="connect" onClick={() => { setError(""); setAttempt((n) => n + 1); }}>Retry chain read</button>
+        </div>
       </main>
     );
   }

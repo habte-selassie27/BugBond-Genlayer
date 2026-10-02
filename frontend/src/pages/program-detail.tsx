@@ -11,26 +11,41 @@ function ProgramDossierView({ id }: { id: string }) {
   const [item, setItem] = useState<Program>();
   const [items, setItems] = useState<Report[]>([]);
   const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!id) return;
+    let alive = true;
     (async () => {
       try {
         const p = await program(id);
+        const linked = (await reports()).filter((r) => String(r.program_id) === id);
+        if (!alive) return;
         setItem(p);
-        setItems((await reports()).filter((r) => String(r.program_id) === id));
+        setItems(linked);
+        setError("");
       } catch (e) {
+        if (!alive) return;
+        setItem(undefined);
+        setItems([]);
         setError(e instanceof Error ? e.message : "Unable to read program.");
       }
     })();
-  }, [id]);
+    return () => {
+      alive = false;
+    };
+  }, [id, attempt]);
 
   if (error) {
     return (
       <main className="ledger-section">
         <p className="eyebrow">PROGRAM DOSSIER</p>
         <h1>RPC unavailable.</h1>
-        <div className="empty-ledger"><strong>READ FAILED</strong><p>{error}</p></div>
+        <div className="empty-ledger">
+          <strong>READ FAILED</strong>
+          <p>{error}</p>
+          <button className="connect" onClick={() => { setError(""); setAttempt((n) => n + 1); }}>Retry chain read</button>
+        </div>
       </main>
     );
   }

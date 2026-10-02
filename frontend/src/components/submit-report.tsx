@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ensureContract, waitFinalizedSuccessful } from "@/lib/genlayer";
 import { useWallet } from "@/components/wallet-provider";
 import { gen, program } from "@/lib/scope-data";
@@ -7,20 +7,23 @@ import { CopyHash } from "@/components/copy-hash";
 export function SubmitReport({ programId }: { programId: string }) {
   const [state, setState] = useState({ title:"", synopsis:"", url:"", component:"", severity:"MEDIUM" });
   const [bond, setBond] = useState<bigint>();
+  const [bondError, setBondError] = useState("");
   const [message, setMessage] = useState("");
   const [hash, setHash] = useState("");
   const [busy, setBusy] = useState(false);
   const wallet = useWallet();
 
-  useEffect(() => {
+  const loadBond = useCallback(() => {
     program(programId)
-      .then((p) => setBond(BigInt(String(p.min_bond))))
-      .catch((e) => setMessage(e instanceof Error ? e.message : "Unable to read required bond."));
+      .then((p) => { setBond(BigInt(String(p.min_bond))); setBondError(""); })
+      .catch((e) => { setBond(undefined); setBondError(e instanceof Error ? e.message : "Unable to read the required bond."); });
   }, [programId]);
+
+  useEffect(() => { loadBond(); }, [loadBond]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!bond) return;
+    if (bond === undefined) return;
     setBusy(true);
     setMessage("Wallet signature requested…");
     try {
@@ -70,13 +73,33 @@ export function SubmitReport({ programId }: { programId: string }) {
       </div>
 
       <p className="form-note">
-        Exact required researcher bond: {bond === undefined ? "Reading chain…" : gen(bond)}.
-        This value is read from the selected program and cannot be edited.
+        {bond === undefined
+          ? <>Exact required researcher bond: {bondError ? "unavailable — the chain read failed." : "reading chain…"}</>
+          : <>Exact required researcher bond: <b>{gen(bond)}</b>.</>}
+        {" "}This value is read from the selected program and cannot be edited.
+        {bondError ? (
+          <>
+            {" "}
+            <button
+              type="button"
+              className="text-link"
+              onClick={() => { setBondError(""); setBond(undefined); loadBond(); }}
+            >
+              Retry chain read
+            </button>
+          </>
+        ) : null}
       </p>
 
       <div className="form-actions">
         <button className="connect" disabled={busy || !wallet.address || bond === undefined}>
-          {busy ? "SUBMITTING…" : wallet.address ? "SUBMIT BONDED REPORT" : "CONNECT WALLET TO SUBMIT"}
+          {busy
+            ? "SUBMITTING…"
+            : bond === undefined
+              ? (bondError ? "RETRY THE CHAIN READ ABOVE" : "READING REQUIRED BOND…")
+              : wallet.address
+                ? "SUBMIT BONDED REPORT"
+                : "CONNECT WALLET TO SUBMIT"}
         </button>
       </div>
       <p className="form-message" aria-live="polite">{message}</p>

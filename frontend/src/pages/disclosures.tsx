@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { filterItems, reports, reportStatus, severity, severityTone, shortAddr, tone, type Report } from "@/lib/scope-data";
+import { useChainData } from "@/lib/use-chain-data";
 
 const STATUS_LABELS = ["", "UNDER REVIEW", "NEEDS EVIDENCE", "VALID", "DUPLICATE", "KNOWN ISSUE", "OUT OF SCOPE", "EXPLOITABILITY NOT ESTABLISHED", "EXPIRED", "WITHDRAWN"] as const;
 
@@ -9,16 +10,9 @@ const badge = (t: string, label: string) => (
 );
 
 export default function Disclosures() {
-  const [items, setItems] = useState<Report[]>([]);
-  const [state, setState] = useState("LOADING");
+  const { items, state, retry } = useChainData<Report>(reports, []);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
-
-  useEffect(() => {
-    reports()
-      .then((x) => { setItems(x); setState(x.length ? "READY" : "EMPTY"); })
-      .catch(() => setState("RPC ERROR"));
-  }, []);
 
   const visible = filterItems(items, query, status);
 
@@ -41,14 +35,15 @@ export default function Disclosures() {
       {state === "RPC ERROR" ? (
         <div className="empty-ledger">
           <strong>RPC FAILURE</strong>
-          <p>Retry after checking StudioNet and the configured contract address.</p>
+          <p>The StudioNet endpoint did not answer. Reads are retried automatically; retry here once the network responds.</p>
+          <button className="connect" onClick={retry}>Retry chain read</button>
         </div>
       ) : state === "EMPTY" ? (
         <div className="empty-ledger">
           <strong>NO DISCLOSURES YET</strong>
           <p>Reports appear here only after their bonded transaction finalizes on chain.</p>
         </div>
-      ) : visible.length === 0 ? (
+      ) : state !== "LOADING" && visible.length === 0 ? (
         <div className="empty-ledger">
           <strong>NO MATCHING DISCLOSURES</strong>
           <p>No disclosure matches the current search and status filter.</p>
@@ -61,7 +56,7 @@ export default function Disclosures() {
             {STATUS_LABELS.map((label, index) => <option key={index} value={String(index)}>{label || "ALL STATUSES"}</option>)}
           </select>
         </div>
-        <p className="ledger-count">Showing {visible.length} of {items.length} disclosures</p>
+        {state === "LOADING" ? null : <p className="ledger-count">Showing {visible.length} of {items.length} disclosures</p>}
         <div className="table table--disclosures">
           <div className="table-inner">
             <div className="table-head" aria-hidden="true">

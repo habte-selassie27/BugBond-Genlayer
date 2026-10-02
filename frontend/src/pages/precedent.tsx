@@ -1,20 +1,16 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { reports, severity, severityTone, type Report } from "@/lib/scope-data";
+import { useChainData } from "@/lib/use-chain-data";
 
 const badge = (t: string, label: string) => (
   <span className={t ? `badge badge--${t}` : "badge"}>{label}</span>
 );
 
 export default function Precedent() {
-  const [items, setItems] = useState<Report[]>([]);
-  const [state, setState] = useState("LOADING");
-
-  useEffect(() => {
-    reports()
-      .then((r) => { const valid = r.filter((x) => Number(x.status) === 3); setItems(valid); setState(valid.length ? "READY" : "EMPTY"); })
-      .catch(() => setState("RPC ERROR"));
-  }, []);
+  const { items, state, retry } = useChainData<Report>(
+    () => reports().then((r) => r.filter((x) => Number(x.status) === 3)),
+    [],
+  );
 
   const lede =
     state === "LOADING" ? "Scanning settled reports for same-program precedent…"
@@ -40,7 +36,8 @@ export default function Precedent() {
       {state === "RPC ERROR" ? (
         <div className="empty-ledger">
           <strong>RPC FAILURE</strong>
-          <p>Retry after checking StudioNet and the configured contract address.</p>
+          <p>The StudioNet endpoint did not answer. Reads are retried automatically; retry here once the network responds.</p>
+          <button className="connect" onClick={retry}>Retry chain read</button>
         </div>
       ) : state === "EMPTY" ? (
         <div className="empty-ledger">
