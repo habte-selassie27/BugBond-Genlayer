@@ -1,9 +1,12 @@
 import { Link } from "react-router-dom";
+import { ConsensusField } from "@/components/consensus-field";
 
 export default function Home() {
   return (
     <main>
       <section className="hero" aria-labelledby="title">
+        <ConsensusField />
+        <div className="hero-scanline" aria-hidden="true" />
         <p className="eyebrow">PUBLIC SECURITY DISCLOSURE / GENLAYER CONSENSUS</p>
         <h1 id="title">Public findings.<br />Bound scope.<br /><em>Consensus settlement.</em></h1>
         <aside className="brief">
