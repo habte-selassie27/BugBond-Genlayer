@@ -13,9 +13,9 @@ Open http://localhost:5173. Deep links such as `/programs/1` or `/disclosures/2`
 
 ## Environment
 
-Configured in `.env.local` (gitignored). Only `VITE_`-prefixed variables are exposed to the browser.
+Configured in `.env.local` (gitignored). Only `VITE_`-prefixed variables are exposed to the browser. Copy `.env.example` to `.env.local` and adjust the address; reads and writes fail clearly until `VITE_BUGBOND_CONTRACT` is set.
 
-- `VITE_BUGBOND_CONTRACT` — deployed Bugbond contract address. Reads and writes fail clearly when it is missing.
+- `VITE_BUGBOND_CONTRACT` — deployed Bugbond contract address.
 - `VITE_GENLAYER_ENDPOINT` — optional, defaults to `https://studio.genlayer.com/api`.
 
 ## Commands
