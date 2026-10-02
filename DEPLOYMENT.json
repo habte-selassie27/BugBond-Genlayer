@@ -1,8 +1,13 @@
 {
   "network": "studionet",
-  "address": "0xCCc5f1B4589FF468c300B417f46F782110487a9D",
-  "deployment_tx": "0xad49482466c2393bb6123cb2b7fef3b81443f75c79a0a40d6ab2529f8ca06c54",
-  "contract_source_commit": "7f133cb9009b22b6bcf7165ef460030e8fd919c4",
-  "contract_sha256": "ecd525571e8e79fc309388bf5730fba2cbe3a5825c7f2568891f72340e13f067",
-  "deployed_at": "2026-08-13T00:00:00+00:00"
+  "address": "0x3a27d266A1a767373066ED4C256cA027ff34e84C",
+  "deployment_tx": "0xd234248861e4cd869174d9c7407eb7484b9c6501ecff9e46c8e09e1d693036ea",
+  "deployer": "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+  "contract_source_commit": "96d5fa8537a544d16f3e94eb75e2900b09ecb795",
+  "contract_sha256": "c0aa76284de7758a31e701264b5d38405d8df13efaa6d09a63f761a4ba492040",
+  "source_bytes": 27068,
+  "source_line_endings": "lf",
+  "deployed_at": "2026-10-02T17:46:30+00:00",
+  "studio_import_url": "https://studio.genlayer.com/?import-contract=0x3a27d266A1a767373066ED4C256cA027ff34e84C",
+  "explorer_url": "https://explorer-studio.genlayer.com/address/0x3a27d266A1a767373066ED4C256cA027ff34e84C"
 }

@@ -34,9 +34,10 @@ The earlier OriginalityBond submission was rejected because tracked pytest helpe
 Final StudioNet deployment:
 
 ```text
-address: 0xCCc5f1B4589FF468c300B417f46F782110487a9D
-deployment tx: 0xad49482466c2393bb6123cb2b7fef3b81443f75c79a0a40d6ab2529f8ca06c54
-source sha256: ecd525571e8e79fc309388bf5730fba2cbe3a5825c7f2568891f72340e13f067
+address: 0x3a27d266A1a767373066ED4C256cA027ff34e84C
+deployment tx: 0xd234248861e4cd869174d9c7407eb7484b9c6501ecff9e46c8e09e1d693036ea
+deployer: 0x5B3661C576c7001e6d6279C67F3779705d334c89
+source sha256: c0aa76284de7758a31e701264b5d38405d8df13efaa6d09a63f761a4ba492040
 ```
 
 Raw `gen_getContractCode` Base64 bytes, after decoding, and GenLayerJS `getContractCode()` both hash to the frozen local source hash. `scripts/verify-deployed-source.mjs` reproduces that check.

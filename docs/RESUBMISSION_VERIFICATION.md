@@ -17,10 +17,10 @@ Fresh local verification was run from a shallow, blob-filtered, sparse checkout 
 | Frontend lint | PASS: `npm run lint` |
 | Frontend typecheck | PASS: `npx tsc --noEmit` |
 | Frontend production build | PASS: `npm run build`; 10 routes generated |
-| Contract diff | Empty |
-| Contract SHA-256 | `ecd525571e8e79fc309388bf5730fba2cbe3a5825c7f2568891f72340e13f067` |
+| Contract diff | Line-endings only (CRLF → LF); `git diff -w` empty |
+| Contract SHA-256 | `c0aa76284de7758a31e701264b5d38405d8df13efaa6d09a63f761a4ba492040` |
 
-The Direct Mode suite executed `contracts/bugbond.py` through gltest with mocked nondeterministic inputs. No contract source change or redeployment was performed.
+The Direct Mode suite executed `contracts/bugbond.py` through gltest with mocked nondeterministic inputs. The contract source is unchanged apart from line endings (CRLF → LF); see `DEPLOYMENT.json` for the StudioNet redeployment that the frozen source is bound to.
 
 ## Reproduction
 

@@ -51,13 +51,16 @@ Views: full bounded `get_program`, `get_report`, `preview_precedents`, counts, a
 ## Release proof
 
 - Network: StudioNet
-- Contract: `0xCCc5f1B4589FF468c300B417f46F782110487a9D`
-- Deploy tx: `0xad49482466c2393bb6123cb2b7fef3b81443f75c79a0a40d6ab2529f8ca06c54`
-- Source SHA-256: `ecd525571e8e79fc309388bf5730fba2cbe3a5825c7f2568891f72340e13f067`
+- Contract: `0x3a27d266A1a767373066ED4C256cA027ff34e84C`
+- Deploy tx: `0xd234248861e4cd869174d9c7407eb7484b9c6501ecff9e46c8e09e1d693036ea`
+- Deployer: `0x5B3661C576c7001e6d6279C67F3779705d334c89`
+- Source SHA-256: `c0aa76284de7758a31e701264b5d38405d8df13efaa6d09a63f761a4ba492040`
+- Explorer: <https://explorer-studio.genlayer.com/address/0x3a27d266A1a767373066ED4C256cA027ff34e84C>
+- Studio: <https://studio.genlayer.com/?import-contract=0x3a27d266A1a767373066ED4C256cA027ff34e84C>
 
-The deployed source was retrieved after deployment and matched the evidence-fetch/deadline implementation markers. `DEPLOYMENT.json` is the machine-readable binding; `scripts/verify-deployment-source.ps1` validates the local frozen hash.
+The deployed source was retrieved after deployment and hashes to the frozen local source byte-for-byte. `DEPLOYMENT.json` is the machine-readable binding; `scripts/verify-deployment-source.ps1` validates the local frozen hash.
 
-Post-deployment hardening (researcher recall, stale-submission expiry, per-source evidence digests, bounded evidence rounds, slash cap) changed the contract source after the deployment above, so the recorded address no longer matches this tree. Redeploy and refresh `DEPLOYMENT.json`, the release proof, and the on-chain proof table before submission.
+The GenLayer Studio editor transmits Python with LF line endings, so `contracts/bugbond.py` is frozen as LF (27,068 bytes) and pinned `-text` in `.gitattributes` so Git never rewrites it. Redeploying this file from Studio reproduces `c0aa7628…` exactly.
 
 ## Verification
 
