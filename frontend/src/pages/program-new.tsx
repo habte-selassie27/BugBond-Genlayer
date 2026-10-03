@@ -38,7 +38,17 @@ export default function NewProgram(){
   async function submit(e:React.FormEvent){
     e.preventDefault();
     try{
-      if(!f.repo.startsWith("https://")||!f.ref||!f.scope||Date.parse(f.start)>=Date.parse(f.end))throw new Error("Provide HTTPS target, immutable ref, scope, and a valid time window.");
+      // Validate field by field: a single combined message hid which input was
+      // actually rejected, and every throw here happens before the wallet is
+      // ever asked to sign.
+      if(!f.name.trim())throw new Error("Name is required.");
+      if(!f.repo.startsWith("https://"))throw new Error("Repository URL must start with https://.");
+      if(!f.ref.trim())throw new Error("Immutable ref / commit is required.");
+      if(!f.scope.trim())throw new Error("Scope is required.");
+      const start=Date.parse(f.start),end=Date.parse(f.end);
+      if(Number.isNaN(start)||Number.isNaN(end))throw new Error("Starts and Ends must both be set.");
+      if(start>=end)throw new Error(`Ends must be after Starts. You entered ${f.start} → ${f.end}.`);
+      if(start>Date.now())throw new Error("Starts must be today or earlier; submit_report rejects a window that has not opened yet.");
       const payouts=[atto(f.low),atto(f.medium),atto(f.high),atto(f.critical)];
       if(payouts.some(x=>x<=0n)||payouts.some((x,i)=>i>0&&x<payouts[i-1]))throw new Error("Payouts must be ascending positive GEN values.");
       const slash=Number(f.slash);
