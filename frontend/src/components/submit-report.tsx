@@ -1,11 +1,31 @@
 import { useCallback, useEffect, useState } from "react";
-import { ensureContract, waitFinalizedSuccessful } from "@/lib/genlayer";
+import { ensureContract, errorText, waitFinalizedSuccessful } from "@/lib/genlayer";
 import { useWallet } from "@/components/wallet-provider";
 import { gen, program } from "@/lib/scope-data";
 import { CopyHash } from "@/components/copy-hash";
 
+const EMPTY = { title:"", synopsis:"", url:"", component:"", severity:"MEDIUM" };
+type Draft = typeof EMPTY;
+const draftKey = (programId: string) => `bugbond:submit-report-draft:${programId}`;
+function readDraft(programId: string): Draft {
+  try {
+    const raw = window.localStorage.getItem(draftKey(programId));
+    if (!raw) return { ...EMPTY };
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return { ...EMPTY };
+    const draft = { ...EMPTY };
+    for (const key of Object.keys(draft) as (keyof Draft)[]) {
+      const value = (parsed as Record<string, unknown>)[key];
+      if (typeof value === "string") draft[key] = value;
+    }
+    return draft;
+  } catch { return { ...EMPTY }; }
+}
+function saveDraft(programId: string, draft: Draft) { try { window.localStorage.setItem(draftKey(programId), JSON.stringify(draft)); } catch { /* storage disabled: values still live in memory */ } }
+function clearDraft(programId: string) { try { window.localStorage.removeItem(draftKey(programId)); } catch { /* ignore */ } }
+
 export function SubmitReport({ programId }: { programId: string }) {
-  const [state, setState] = useState({ title:"", synopsis:"", url:"", component:"", severity:"MEDIUM" });
+  const [state, setState] = useState<Draft>(() => readDraft(programId));
   const [bond, setBond] = useState<bigint>();
   const [bondError, setBondError] = useState("");
   const [message, setMessage] = useState("");
@@ -13,10 +33,12 @@ export function SubmitReport({ programId }: { programId: string }) {
   const [busy, setBusy] = useState(false);
   const wallet = useWallet();
 
+  useEffect(() => { saveDraft(programId, state); }, [programId, state]);
+
   const loadBond = useCallback(() => {
     program(programId)
       .then((p) => { setBond(BigInt(String(p.min_bond))); setBondError(""); })
-      .catch((e) => { setBond(undefined); setBondError(e instanceof Error ? e.message : "Unable to read the required bond."); });
+      .catch((e) => { setBond(undefined); setBondError(errorText(e, "Unable to read the required bond.")); });
   }, [programId]);
 
   useEffect(() => { loadBond(); }, [loadBond]);
@@ -38,9 +60,10 @@ export function SubmitReport({ programId }: { programId: string }) {
       setHash(hash);
       setMessage(`Transaction submitted: ${hash}. Waiting for finalization and GenVM execution…`);
       await waitFinalizedSuccessful(client as never, hash as never);
+      clearDraft(programId);
       setMessage("Finalized with successful GenVM execution. Read the new disclosure from the chain ledger.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Report submission failed.");
+      setMessage(errorText(error,"Report submission failed."));
     } finally {
       setBusy(false);
     }
@@ -90,6 +113,9 @@ export function SubmitReport({ programId }: { programId: string }) {
           </>
         ) : null}
       </p>
+      {Object.keys(EMPTY).some((k) => state[k as keyof Draft] !== EMPTY[k as keyof Draft]) ? (
+        <p className="form-note form-note--draft">Kept as a draft in this browser — this report is restored after a reload, a rejected signature, or a failed submission, and is cleared only once the disclosure finalizes.</p>
+      ) : null}
 
       <div className="form-actions">
         <button className="connect" disabled={busy || !wallet.address || bond === undefined}>

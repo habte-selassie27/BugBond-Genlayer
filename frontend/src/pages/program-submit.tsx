@@ -15,7 +15,7 @@ export default function Submit() {
           </p>
         </div>
       </header>
-      <SubmitReport programId={id} />
+      <SubmitReport key={id} programId={id} />
     </main>
   );
 }
