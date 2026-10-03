@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ensureContract, errorText, readClient, waitFinalizedSuccessful } from "@/lib/genlayer";
 import { useWallet } from "@/components/wallet-provider";
-import { gen, program } from "@/lib/scope-data";
+import { gen, invalidateReports, program } from "@/lib/scope-data";
 import { CopyHash } from "@/components/copy-hash";
 
 const EMPTY = { title:"", synopsis:"", url:"", component:"", severity:"MEDIUM" };
@@ -103,6 +103,7 @@ export function SubmitReport({ programId }: { programId: string }) {
       try { countAfter = Number(await readClient().readContract({ address: ensureContract(), functionName: "report_count", args: [] }) as number); } catch { /* verification read failed */ }
       if (countAfter < 0) throw new Error(`Transaction ${hash} finalized, but report_count could not be re-read, so the disclosure is unconfirmed. Your draft is kept — reload the ledger to check before retrying.`);
       if (countAfter <= countBefore) throw new Error(`Transaction ${hash} finalized, but report_count is still ${countAfter}, so no disclosure was recorded. Your draft is kept — check the ledger before retrying, so you do not pay the bond twice.`);
+      invalidateReports();
       clearDraft(programId);
       setMessage(`Finalized with successful GenVM execution. Report BB-${countAfter} is on the chain ledger.`);
     } catch (error) {

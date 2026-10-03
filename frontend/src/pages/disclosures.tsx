@@ -63,7 +63,7 @@ export default function Disclosures() {
               <span>Report</span><span>Severity</span><span>Component</span><span>Verdict</span><span>Researcher</span>
             </div>
             <div className="rows">
-              {state === "LOADING" && [0, 1, 2].map((i) => (
+              {state === "LOADING" && items.length === 0 && [0, 1, 2].map((i) => (
                 <div className="skeleton-row" key={i}><i /><i /><i /><i /><i /></div>
               ))}
               {visible.map((r) => (

@@ -4,7 +4,11 @@ import { ExecutionResult, TransactionStatus, type GenLayerTransaction } from "ge
 export const CONTRACT_ADDRESS = import.meta.env.VITE_BUGBOND_CONTRACT;
 export const ENDPOINT = import.meta.env.VITE_GENLAYER_ENDPOINT ?? "https://studio.genlayer.com/api";
 export function ensureContract() { if (!CONTRACT_ADDRESS) throw new Error("Bugbond contract is not configured. Set VITE_BUGBOND_CONTRACT."); return CONTRACT_ADDRESS; }
-export function readClient() { return createClient({ chain: studionet, endpoint: ENDPOINT, account: createAccount() }); }
+
+// One shared reader: rebuilding the client (and its account + transport) on
+// every call added setup cost to a read path that is already ~2s per RPC.
+let reader: ReturnType<typeof createClient> | undefined;
+export function readClient() { return (reader ??= createClient({ chain: studionet, endpoint: ENDPOINT, account: createAccount() })); }
 
 export function errorText(error: unknown, fallback: string): string {
   if (error instanceof Error) return error.message || fallback;

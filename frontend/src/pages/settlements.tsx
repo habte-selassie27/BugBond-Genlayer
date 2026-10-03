@@ -11,7 +11,10 @@ const badge = (t: string, label: string) => (
 );
 
 export default function Settlements() {
-  const { items, state, retry } = useChainData<Report>(() => reports().then((r) => r.filter(final)), []);
+  const { items, state, retry } = useChainData<Report>(
+    (onBatch) => reports((batch) => onBatch?.(batch.filter(final))).then((r) => r.filter(final)),
+    [],
+  );
   const [query, setQuery] = useState("");
   const [outcome, setOutcome] = useState("");
 
@@ -65,7 +68,7 @@ export default function Settlements() {
               <span>Report</span><span>Outcome</span><span>Settlement</span>
             </div>
             <div className="rows">
-              {state === "LOADING" && [0, 1, 2].map((i) => (
+              {state === "LOADING" && items.length === 0 && [0, 1, 2].map((i) => (
                 <div className="skeleton-row" key={i}><i /><i /><i /></div>
               ))}
               {visible.map((r) => (

@@ -6,9 +6,11 @@ const badge = (t: string, label: string) => (
   <span className={t ? `badge badge--${t}` : "badge"}>{label}</span>
 );
 
+const valid = (r: Report) => Number(r.status) === 3;
+
 export default function Precedent() {
   const { items, state, retry } = useChainData<Report>(
-    () => reports().then((r) => r.filter((x) => Number(x.status) === 3)),
+    (onBatch) => reports((batch) => onBatch?.(batch.filter(valid))).then((r) => r.filter(valid)),
     [],
   );
 
@@ -51,7 +53,7 @@ export default function Precedent() {
               <span>Report</span><span>Candidate</span><span>Synopsis</span>
             </div>
             <div className="rows">
-              {state === "LOADING" && [0, 1, 2].map((i) => (
+              {state === "LOADING" && items.length === 0 && [0, 1, 2].map((i) => (
                 <div className="skeleton-row" key={i}><i /><i /><i /></div>
               ))}
               {items.map((r) => (

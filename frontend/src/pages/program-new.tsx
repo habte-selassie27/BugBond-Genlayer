@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ensureContract, errorText, readClient, waitFinalizedSuccessful } from "@/lib/genlayer";
 import { useWallet } from "@/components/wallet-provider";
 import { CopyHash } from "@/components/copy-hash";
+import { invalidatePrograms } from "@/lib/scope-data";
 
 const atto=(v:string)=>{if(!/^\d+(\.\d{0,18})?$/.test(v))throw new Error("Use a non-negative GEN amount with at most 18 decimals.");const [w,f=""]=v.split(".");return BigInt(w)*1000000000000000000n+BigInt((f+"0".repeat(18)).slice(0,18));};
 
@@ -70,6 +71,7 @@ export default function NewProgram(){
       try{after=Number(await readClient().readContract({address:ensureContract(),functionName:"program_count",args:[]}) as number)}catch{ /* verification read failed */ }
       if(after<0)throw new Error(`Transaction ${hash} finalized, but program_count could not be re-read, so the program is unconfirmed. Your draft is kept — reload the ledger to check before retrying.`);
       if(after<=before)throw new Error(`Transaction ${hash} finalized, but program_count is still ${after}, so no program was created. Your draft is kept — check the ledger before retrying, so you do not fund it twice.`);
+      invalidatePrograms();
       clearDraft();
       setMessage(`Finalized with successful GenVM execution. Program BB-P${after} is discoverable from the chain ledger.`);
       navigate("/programs");

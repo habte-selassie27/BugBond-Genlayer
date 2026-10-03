@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
 import { WalletProvider } from "@/components/wallet-provider";
 import { AppRoutes } from "@/routes";
+import { warmChain } from "@/lib/scope-data";
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Root element #root is missing from index.html.");
@@ -23,3 +24,7 @@ createRoot(container).render(
     </ThemeProvider>
   </StrictMode>
 );
+
+// Prime the ledger reads while the first paint is still idle: the first
+// StudioNet call otherwise pays DNS/TLS (~5s) on the user's click.
+warmChain();

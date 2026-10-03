@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { Batch } from "@/lib/scope-data";
 
 export type ChainState = "LOADING" | "READY" | "EMPTY" | "RPC ERROR";
 
-export function useChainData<T>(load: () => Promise<T[]>, deps: React.DependencyList) {
+export function useChainData<T>(load: (onBatch?: Batch<T>) => Promise<T[]>, deps: React.DependencyList) {
   const [items, setItems] = useState<T[]>([]);
   const [state, setState] = useState<ChainState>("LOADING");
   const [attempt, setAttempt] = useState(0);
@@ -20,7 +21,13 @@ export function useChainData<T>(load: () => Promise<T[]>, deps: React.Dependency
 
   useEffect(() => {
     let alive = true;
-    loadRef.current()
+    // Partial pages stream in as each id page finishes, so the table fills in
+    // while the remaining records are still being read.
+    loadRef.current((rows) => {
+      if (!alive) return;
+      setItems(rows);
+      setState("LOADING");
+    })
       .then((rows) => {
         if (!alive) return;
         setItems(rows);

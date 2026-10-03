@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
-import { gen, report, reportStatus, severity, severityTone, tone, type Report } from "@/lib/scope-data";
+import { gen, invalidateReports, report, reportStatus, severity, severityTone, tone, type Report } from "@/lib/scope-data";
 import { ReportActions } from "@/components/report-actions";
 
 export default function DisclosureDossier() {
@@ -13,7 +13,8 @@ function DisclosureDossierView({ id }: { id: string }) {
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const apply = useCallback((record: Report) => { setItem(record); setError(""); }, []);
-  const refresh = useCallback(async () => { if (!id) return; apply(await report(id)); }, [id, apply]);
+  // A write just changed this record, so drop the cached copy before re-reading.
+  const refresh = useCallback(async () => { if (!id) return; invalidateReports(); apply(await report(id)); }, [id, apply]);
 
   useEffect(() => {
     if (!id) return;

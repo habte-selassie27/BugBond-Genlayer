@@ -45,7 +45,7 @@ export default function Programs() {
               <span>Program</span><span>Repository</span><span>Status</span><span>Pool</span><span>Bond</span><span>Reports</span>
             </div>
             <div className="rows">
-              {state === "LOADING" && [0, 1, 2].map((i) => (
+              {state === "LOADING" && items.length === 0 && [0, 1, 2].map((i) => (
                 <div className="skeleton-row" key={i}><i /><i /><i /><i /><i /><i /></div>
               ))}
               {items.map((p) => (

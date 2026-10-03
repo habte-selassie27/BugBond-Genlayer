@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { gen, program, programStatus, programTone, reports, type Program, type Report } from "@/lib/scope-data";
+import { gen, program, programReports, programStatus, programTone, type Program, type Report } from "@/lib/scope-data";
 
 export default function ProgramDossier() {
   const { id = "" } = useParams<{ id: string }>();
@@ -18,12 +18,16 @@ function ProgramDossierView({ id }: { id: string }) {
     let alive = true;
     (async () => {
       try {
+        // The header only needs one program read; the linked disclosures are
+        // read from this program's own id page (and stream in) rather than by
+        // downloading every report on the ledger and filtering afterwards.
         const p = await program(id);
-        const linked = (await reports()).filter((r) => String(r.program_id) === id);
         if (!alive) return;
         setItem(p);
-        setItems(linked);
         setError("");
+        const linked = await programReports(id, Number(p.report_count), (rows) => { if (alive) setItems(rows); });
+        if (!alive) return;
+        setItems(linked);
       } catch (e) {
         if (!alive) return;
         setItem(undefined);
