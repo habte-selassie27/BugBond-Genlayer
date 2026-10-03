@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ensureContract, waitFinalizedSuccessful } from "@/lib/genlayer";
+import { ensureContract, errorText, waitFinalizedSuccessful } from "@/lib/genlayer";
 import { useWallet } from "@/components/wallet-provider";
 import type { Report } from "@/lib/scope-data";
 import { CopyHash } from "@/components/copy-hash";
@@ -43,7 +43,7 @@ export function ReportActions({item,onRefresh}:{item:Report;onRefresh:()=>Promis
    await onRefresh();
    setMessage("Chain state refreshed.");
   }catch(error){
-   setMessage(error instanceof Error?error.message:"Protocol action failed.");
+   setMessage(errorText(error,"Protocol action failed."));
    await onRefresh().catch(()=>undefined);
   }finally{setBusy(false)}
  }

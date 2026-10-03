@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { studionet } from "genlayer-js/chains";
-import { injectedClient } from "@/lib/genlayer";
+import { errorText, injectedClient } from "@/lib/genlayer";
 
 type NetworkStatus = "unknown" | "ready" | "error";
 type Wallet = {
@@ -44,7 +44,7 @@ export function WalletProvider({children}:{children:React.ReactNode}) {
   try{
    const chainId=await window.ethereum.request({method:"eth_chainId"});
    if(typeof chainId==="string"&&chainId.toLowerCase()===studioChainId){setNetworkStatus("ready");setError(undefined)}
-   else {setNetworkStatus("error");setError("Wallet account connected. Switch to GenLayer StudioNet to sign Bugbond writes.")}
+   else {setNetworkStatus("error");setError("Wallet account connected, but it is not on GenLayer StudioNet yet. Bugbond will ask your wallet to switch when you sign a write.")}
   }catch{setNetworkStatus("error");setError("Wallet account connected, but Bugbond could not confirm StudioNet. Switch to GenLayer StudioNet, then try again.")}
  },[]);
  const syncWallet=useCallback(async()=>{
@@ -57,10 +57,14 @@ export function WalletProvider({children}:{children:React.ReactNode}) {
    await inspectNetwork();
   }catch(error){clearSession();setError(error instanceof Error?error.message:"Unable to read the injected wallet session.")}
  },[clearSession,inspectNetwork,manuallyDisconnected]);
- const prepareStudioNet=useCallback(async(account:`0x${string}`)=>{
-  try{const client=await injectedClient(account);setNetworkStatus("ready");setError(undefined);return client}
-  catch(error){setNetworkStatus("error");setError(accountError);throw error}
- },[]);
+  const prepareStudioNet=useCallback(async(account:`0x${string}`)=>{
+   try{const client=await injectedClient(account);setNetworkStatus("ready");setError(undefined);return client}
+   catch(error){
+    const detail=errorText(error,"StudioNet setup failed.");
+    setNetworkStatus("error");setError(`${accountError} ${detail}`);
+    throw error instanceof Error?error:new Error(detail);
+   }
+  },[]);
  const connect=useCallback(async()=>{
   setManualDisconnect(false);
   setStatus("connecting");setError(undefined);
