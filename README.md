@@ -51,12 +51,12 @@ Views: full bounded `get_program`, `get_report`, `preview_precedents`, counts, a
 ## Release proof
 
 - Network: StudioNet
-- Contract: `0x3a27d266A1a767373066ED4C256cA027ff34e84C`
-- Deploy tx: `0xd234248861e4cd869174d9c7407eb7484b9c6501ecff9e46c8e09e1d693036ea`
-- Deployer: `0x5B3661C576c7001e6d6279C67F3779705d334c89`
+- Contract: `0x425327dD3b5216cB7f0581242aaa1F87e202Cb26`
+- Deploy tx: `0x61f45965500fa85c1c32110925e018e964374dbed7af8235dc2ac61e1b99100a`
+- Deployer: `0x37cDbd86743e2b80486413E89ca4c70A58147889`
 - Source SHA-256: `c0aa76284de7758a31e701264b5d38405d8df13efaa6d09a63f761a4ba492040`
-- Explorer: <https://explorer-studio.genlayer.com/address/0x3a27d266A1a767373066ED4C256cA027ff34e84C>
-- Studio: <https://studio.genlayer.com/?import-contract=0x3a27d266A1a767373066ED4C256cA027ff34e84C>
+- Explorer: <https://explorer-studio.genlayer.com/address/0x425327dD3b5216cB7f0581242aaa1F87e202Cb26>
+- Studio: <https://studio.genlayer.com/?import-contract=0x425327dD3b5216cB7f0581242aaa1F87e202Cb26>
 
 The deployed source was retrieved after deployment and hashes to the frozen local source byte-for-byte. `DEPLOYMENT.json` is the machine-readable binding; `scripts/verify-deployment-source.ps1` validates the local frozen hash.
 
@@ -77,13 +77,13 @@ The Direct Mode suite contains 47 tests and passes 47/47. It covers the original
 
 ## On-chain proof
 
-Program 1 locked 10 GEN against Express `<4.20.0` `response.redirect()` XSS at immutable commit `04bc62787be974874bc1467b23606c36bc9779ba`, component `lib/response.js`. The evidence preflight verified both the advisory API and raw source with HTTP 200.
+Program 1 locked 10 GEN against Express `<4.20.0` `response.redirect()` XSS at immutable commit `04bc62787be974874bc1467b23606c36bc9779ba`, component `lib/response.js`, on the official deployment `0x425327dD3b5216cB7f0581242aaa1F87e202Cb26`. The evidence preflight verified both the advisory API and raw source with HTTP 200.
 
 | Step | Method | Transaction | Execution / resulting state |
 |---|---|---|---|
-| Fund program | `create_program` | `0xa7c31068b59fe2e36945841fe370477444431c1cc239512466eb324c6aa2c6a4` | GenVM SUCCESS; Program 1 funded 10 GEN |
-| Bond disclosure | `submit_report` | `0x621cf8463429f71088e0eebf8c7d22007a2f3f95cdd7d54f4f97e9a65b6080b9` | GenVM SUCCESS; Report 1 bonded 1 GEN |
-| Validator adjudication | `adjudicate` | `0xa305e878583d13e147111d4af8021734891ce0645811938e3573d291fc41babd` | FINALIZED / Accepted / GenVM SUCCESS / empty stderr; `KNOWN_ISSUE`, `NONE` |
-| Settlement | finalized transfer | `0x30dc5ed880bc5bd04c7d65620d428f665a19a5287aa6928476e869c58fea8855` | 1 GEN refund to researcher |
+| Fund program | `create_program` | `0x669a4aa540934ec925fd239c91b3a3424fe0bff3916826646d07179f99d6898b` | FINALIZED / `MAJORITY_AGREE`; 1 round, 4 agree / 1 idle; Program 1 funded 10 GEN |
+| Bond disclosure | `submit_report` | `0x0bd73694951bd47b39b304b02409d68c996bb8938748c91ebaaec7aee1c20f1e` | FINALIZED / `MAJORITY_AGREE`; 1 round, 3 agree / 2 idle; Report 1 bonded 1 GEN, status `SUBMITTED` |
+| Validator adjudication | `adjudicate` | `0x2e809469ba95fe379c7b3991c36ca41d17a05dc218757ffc35a3b66a36826fe1` | FINALIZED / `MAJORITY_AGREE`; 3 rounds, 3 agree / 2 idle; `KNOWN_ISSUE`, `NONE`, status `SETTLED_KNOWN` |
+| Settlement | internal refund | `0x40fe986fce86251ecf3a2c8b19893eeed51737ede35cac1f4bdb9d977e4f3346` | FINALIZED; 1 GEN bond refunded from Program 1 to researcher `0x5B36…c89`, triggered by the adjudicate tx |
 
-The stored evidence summary identifies GHSA-qw6h-vgh9-j6wx / CVE-2024-43796 and the pinned component; reasoning classifies it as a documented known issue. Payout is 0 GEN, refund 1 GEN, slash 0 GEN, and remaining sponsor pool is 10 GEN. The historical 404 attempt `0x9ca276b21f753cc8ff122db38b1fa354f16140488697e9166841273f87630be0` finalized a rollback with no money movement, proving the fail-closed evidence path.
+Every step above is signed by sponsor and researcher `0x5B3661C576c7001e6d6279C67F3779705d334c89`; the `idle` rows per round are the validators cancelled once quorum is reached, which is expected. The stored evidence summary identifies GHSA-qw6h-vgh9-j6wx / CVE-2024-43796 and the pinned component; reasoning classifies it as a documented known issue. Payout is 0 GEN, refund 1 GEN, slash 0 GEN, and remaining sponsor pool is 10 GEN. On a superseded contract the 404 attempt `0x9ca276b21f753cc8ff122db38b1fa354f16140488697e9166841273f87630be0` likewise finalized a rollback with no money movement, proving the fail-closed evidence path.

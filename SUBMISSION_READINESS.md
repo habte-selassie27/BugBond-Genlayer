@@ -34,9 +34,9 @@ The earlier OriginalityBond submission was rejected because tracked pytest helpe
 Final StudioNet deployment:
 
 ```text
-address: 0x3a27d266A1a767373066ED4C256cA027ff34e84C
-deployment tx: 0xd234248861e4cd869174d9c7407eb7484b9c6501ecff9e46c8e09e1d693036ea
-deployer: 0x5B3661C576c7001e6d6279C67F3779705d334c89
+address: 0x425327dD3b5216cB7f0581242aaa1F87e202Cb26
+deployment tx: 0x61f45965500fa85c1c32110925e018e964374dbed7af8235dc2ac61e1b99100a
+deployer: 0x37cDbd86743e2b80486413E89ca4c70A58147889
 source sha256: c0aa76284de7758a31e701264b5d38405d8df13efaa6d09a63f761a4ba492040
 ```
 
@@ -44,11 +44,13 @@ Raw `gen_getContractCode` Base64 bytes, after decoding, and GenLayerJS `getContr
 
 ## Live evidence and settlement proof
 
+All four steps ran on the official deployment `0x425327dD3b5216cB7f0581242aaa1F87e202Cb26`, signed by sponsor/researcher `0x5B3661C576c7001e6d6279C67F3779705d334c89`.
+
 | Step | Transaction | Result |
 |---|---|---|
-| Create/fund Program 1 (10 GEN) | `0xa7c31068b59fe2e36945841fe370477444431c1cc239512466eb324c6aa2c6a4` | Accepted, GenVM SUCCESS |
-| Submit Report 1 (1 GEN bond) | `0x621cf8463429f71088e0eebf8c7d22007a2f3f95cdd7d54f4f97e9a65b6080b9` | Accepted, GenVM SUCCESS |
-| Adjudicate GHSA-qw6h-vgh9-j6wx | `0xa305e878583d13e147111d4af8021734891ce0645811938e3573d291fc41babd` | FINALIZED, Accepted, GenVM SUCCESS, empty stderr |
-| Bond refund | `0x30dc5ed880bc5bd04c7d65620d428f665a19a5287aa6928476e869c58fea8855` | FINALIZED: 1 GEN to researcher |
+| Create/fund Program 1 (10 GEN) | `0x669a4aa540934ec925fd239c91b3a3424fe0bff3916826646d07179f99d6898b` | FINALIZED, `MAJORITY_AGREE`, 1 round (4 agree / 1 idle) |
+| Submit Report 1 (1 GEN bond) | `0x0bd73694951bd47b39b304b02409d68c996bb8938748c91ebaaec7aee1c20f1e` | FINALIZED, `MAJORITY_AGREE`, 1 round (3 agree / 2 idle), status `SUBMITTED` |
+| Adjudicate GHSA-qw6h-vgh9-j6wx | `0x2e809469ba95fe379c7b3991c36ca41d17a05dc218757ffc35a3b66a36826fe1` | FINALIZED, `MAJORITY_AGREE`, 3 rounds (3 agree / 2 idle), status `SETTLED_KNOWN` |
+| Bond refund (internal, triggered by adjudicate) | `0x40fe986fce86251ecf3a2c8b19893eeed51737ede35cac1f4bdb9d977e4f3346` | FINALIZED: 1 GEN from Program 1 to researcher `0x5B36…c89` |
 
-Validators fetched the GitHub advisory API and pinned `lib/response.js` at commit `04bc62787be974874bc1467b23606c36bc9779ba`. The stored result is `KNOWN_ISSUE / NONE`, payout `0`, refund `1 GEN`, slash `0`, remaining sponsor pool `10 GEN`.
+Validators fetched the GitHub advisory API and pinned `lib/response.js` at commit `04bc62787be974874bc1467b23606c36bc9779ba`. The stored result is `KNOWN_ISSUE / NONE`, payout `0`, refund `1 GEN`, slash `0`, remaining sponsor pool `10 GEN`. The `idle` rows in each round are validators cancelled after quorum, which is expected behaviour.
