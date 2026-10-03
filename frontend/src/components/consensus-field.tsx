@@ -145,13 +145,15 @@ export function ConsensusField() {
       document.addEventListener("visibilitychange", onVisibility);
       reduced.addEventListener("change", onReduce);
 
-      const clock = new THREE.Clock();
+      // THREE.Clock is deprecated in this version; a plain performance.now()
+      // baseline gives the same elapsed time without the console warning.
+      const startedAt = performance.now();
       const tick = () => {
         if (disposed) return;
         frame = requestAnimationFrame(tick);
         if (!running) return;
 
-        const t = clock.getElapsedTime();
+        const t = (performance.now() - startedAt) / 1000;
         pointer.x += (pointer.tx - pointer.x) * 0.045;
         pointer.y += (pointer.ty - pointer.y) * 0.045;
 
