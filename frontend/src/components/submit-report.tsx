@@ -97,8 +97,14 @@ export function SubmitReport({ programId }: { programId: string }) {
         catch { return false; }
       };
       await waitFinalizedSuccessful(client as never, hash as never, landed);
+      // The receipt label alone is not proof: clear the draft only when the
+      // chain actually records a new disclosure, otherwise keep every value.
+      let countAfter = -1;
+      try { countAfter = Number(await readClient().readContract({ address: ensureContract(), functionName: "report_count", args: [] }) as number); } catch { /* verification read failed */ }
+      if (countAfter < 0) throw new Error(`Transaction ${hash} finalized, but report_count could not be re-read, so the disclosure is unconfirmed. Your draft is kept — reload the ledger to check before retrying.`);
+      if (countAfter <= countBefore) throw new Error(`Transaction ${hash} finalized, but report_count is still ${countAfter}, so no disclosure was recorded. Your draft is kept — check the ledger before retrying, so you do not pay the bond twice.`);
       clearDraft(programId);
-      setMessage("Finalized with successful GenVM execution. Read the new disclosure from the chain ledger.");
+      setMessage(`Finalized with successful GenVM execution. Report BB-${countAfter} is on the chain ledger.`);
     } catch (error) {
       setMessage(errorText(error,"Report submission failed."));
     } finally {

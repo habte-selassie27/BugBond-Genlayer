@@ -64,8 +64,14 @@ export default function NewProgram(){
        try{return Number(await readClient().readContract({address:ensureContract(),functionName:"program_count",args:[]}) as number)>before}catch{return false}
       };
       await waitFinalizedSuccessful(c as never,hash as never,grew);
+      // A receipt label is not proof either: keep the draft unless the chain
+      // shows the program count actually moved.
+      let after=-1;
+      try{after=Number(await readClient().readContract({address:ensureContract(),functionName:"program_count",args:[]}) as number)}catch{ /* verification read failed */ }
+      if(after<0)throw new Error(`Transaction ${hash} finalized, but program_count could not be re-read, so the program is unconfirmed. Your draft is kept — reload the ledger to check before retrying.`);
+      if(after<=before)throw new Error(`Transaction ${hash} finalized, but program_count is still ${after}, so no program was created. Your draft is kept — check the ledger before retrying, so you do not fund it twice.`);
       clearDraft();
-      setMessage("Finalized with successful GenVM execution. The new program is discoverable from the chain ledger.");
+      setMessage(`Finalized with successful GenVM execution. Program BB-P${after} is discoverable from the chain ledger.`);
       navigate("/programs");
     }catch(err){
       setMessage(errorText(err,"Program creation failed."));
