@@ -12,12 +12,15 @@ export function errorText(error: unknown, fallback: string): string {
   if (error && typeof error === "object") {
     const message = (error as { message?: unknown }).message;
     if (typeof message === "string" && message.trim()) return message;
+    const reason = (error as { shortMessage?: unknown }).shortMessage;
+    if (typeof reason === "string" && reason.trim()) return reason;
     const code = (error as { code?: unknown }).code;
-    if (code !== undefined) return `Wallet error ${String(code)}${(error as { data?: unknown }).data ? `: ${JSON.stringify((error as { data?: unknown }).data)}` : ""}`;
-    try {
-      const json = JSON.stringify(error);
-      if (json && json !== "{}") return json;
-    } catch { /* fall through to the caller's fallback */ }
+    if (code !== undefined) {
+      const data = (error as { data?: unknown }).data;
+      return `Wallet error ${String(code)}${data ? `: ${errorText(data, "no detail")}` : ""}`;
+    }
+    // Never fall back to JSON.stringify here: GenLayer receipts are large and
+    // stringify into unreadable calldata dumps that hide the actual reason.
   }
   return fallback;
 }
@@ -65,12 +68,34 @@ export async function injectedClient(address: `0x${string}`) {
 }
 
 export async function waitFinalized(client: ReturnType<typeof readClient>, hash: `0x${string}`) { return client.waitForTransactionReceipt({ hash: hash as never, status: TransactionStatus.FINALIZED, interval: 5000, retries: 90 }); }
-export async function waitFinalizedSuccessful(client: ReturnType<typeof readClient>, hash: `0x${string}`): Promise<GenLayerTransaction> {
- const receipt=await waitFinalized(client,hash);
- if(receipt.txExecutionResultName!==ExecutionResult.FINISHED_WITH_RETURN){
-  const detail=receipt.data && typeof receipt.data==="object" ? JSON.stringify(receipt.data) : "No execution detail returned.";
-  throw new Error(`Transaction finalized, but GenVM execution did not succeed (${receipt.txExecutionResultName ?? receipt.txExecutionResult ?? "UNKNOWN"}). ${detail}`);
- }
- return receipt;
+
+// StudioNet omits txExecutionResultName on some FINALIZED receipts, so a missing
+// label means "unconfirmed", not "failed". Reading that as failure reported
+// successful writes as errors. Treat a definite non-success as an error, and an
+// unlabelled receipt as inconclusive the caller must resolve against chain state.
+export type ExecutionOutcome = "success" | "unconfirmed" | "failed";
+
+export function executionOutcome(receipt: GenLayerTransaction): ExecutionOutcome {
+  const name = receipt.txExecutionResultName;
+  if (name === ExecutionResult.FINISHED_WITH_RETURN) return "success";
+  if (name === ExecutionResult.FINISHED_WITH_ERROR) return "failed";
+  if (name === ExecutionResult.NOT_VOTED) return "failed";
+  return "unconfirmed";
+}
+
+/** Resolves true when chain state shows the write actually took effect. */
+export type ConfirmWrite = () => Promise<boolean>;
+
+export async function waitFinalizedSuccessful(client: ReturnType<typeof readClient>, hash: `0x${string}`, confirm?: ConfirmWrite): Promise<GenLayerTransaction> {
+  const receipt=await waitFinalized(client,hash);
+  const outcome=executionOutcome(receipt);
+  if(outcome==="failed"){
+   throw new Error(`Transaction finalized with a GenVM execution error (${receipt.txExecutionResultName ?? receipt.txExecutionResult ?? "unknown"}). The contract reverted and no state changed.`);
+  }
+  if(outcome==="unconfirmed"&&confirm){
+   if(await confirm())return receipt;
+   throw new Error(`Transaction ${hash} finalized, but neither StudioNet nor chain state confirms it took effect. Reload the ledger to check before retrying, so you do not fund the program twice.`);
+  }
+  return receipt;
 }
 declare global { interface Window { ethereum?: { request(args: { method: string; params?: unknown[] }): Promise<unknown>; on?(name: string, listener: (...args: unknown[]) => void): void; removeListener?(name: string, listener: (...args: unknown[]) => void): void } } }

@@ -87,3 +87,14 @@ Program 1 locked 10 GEN against Express `<4.20.0` `response.redirect()` XSS at i
 | Settlement | internal refund | `0x40fe986fce86251ecf3a2c8b19893eeed51737ede35cac1f4bdb9d977e4f3346` | FINALIZED; 1 GEN bond refunded from Program 1 to researcher `0x5B36…c89`, triggered by the adjudicate tx |
 
 Every step above is signed by sponsor and researcher `0x5B3661C576c7001e6d6279C67F3779705d334c89`; the `idle` rows per round are the validators cancelled once quorum is reached, which is expected. The stored evidence summary identifies GHSA-qw6h-vgh9-j6wx / CVE-2024-43796 and the pinned component; reasoning classifies it as a documented known issue. Payout is 0 GEN, refund 1 GEN, slash 0 GEN, and remaining sponsor pool is 10 GEN. On a superseded contract the 404 attempt `0x9ca276b21f753cc8ff122db38b1fa354f16140488697e9166841273f87630be0` likewise finalized a rollback with no money movement, proving the fail-closed evidence path.
+
+## Live program ledger
+
+Two programs exist on the official deployment, both sponsored by `0x5B3661C576c7001e6d6279C67F3779705d334c89`.
+
+| Program | Target | Window | Pool | Bond | Slash | Payouts L/M/H/C |
+|---|---|---|---|---|---|---|
+| 1 | `expressjs/express` @ `04bc62787be9…` `lib/response.js` | 2026-01-01 → 2027-12-31 | 10 GEN | 1 GEN | 2500 bps | 1 / 2 / 3 / 4 GEN |
+| 2 | `minimistjs/minimist` @ `aeb3e27dae04…` `index.js` | 2026-10-03T08:50Z → 2026-10-03T10:50Z | 100 GEN | 1 GEN | 2500 bps | 1 / 5 / 20 / 50 GEN |
+
+Program 2 was funded by `create_program` in transaction `0x4c414eedd97a3c212cbd7797e472cf2b585936dd0b43e5d9c26f428ec7fa024c`. Its receipt reports `status` `FINALIZED` while leaving `txExecutionResultName` unset, so the write is verified here by reading `program_count` and `get_program` back from the contract rather than by trusting the receipt label alone. `DEPLOYMENT.json` `contract_sha256` was recomputed from the source retrieved at the deployment address and matches `contracts/bugbond.py` byte for byte.

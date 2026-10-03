@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ensureContract, errorText, waitFinalizedSuccessful } from "@/lib/genlayer";
+import { ensureContract, errorText, readClient, waitFinalizedSuccessful } from "@/lib/genlayer";
 import { useWallet } from "@/components/wallet-provider";
 import { CopyHash } from "@/components/copy-hash";
 
@@ -55,9 +55,15 @@ export default function NewProgram(){
       if(!Number.isInteger(slash)||slash<0||slash>5000)throw new Error("Slash must be 0-5000 bps; the protocol caps it so a bond can never be fully confiscated.");
       setBusy(true);
       const c=await wallet.getWriteClient();
+      // Read the count first so an unlabelled receipt can be settled against
+      // chain state instead of being reported as a failure.
+      const before=Number(await readClient().readContract({address:ensureContract(),functionName:"program_count",args:[]}) as number);
       const hash=await c.writeContract({address:ensureContract(),functionName:"create_program",args:[f.name,f.repo,f.ref,f.scope,new Date(f.start).toISOString(),new Date(f.end).toISOString(),atto(f.bond),slash,...payouts],value:atto(f.funding),consensusMaxRotations:3});
       setHash(hash);setMessage(`Submitted ${hash}; waiting for finalization and GenVM execution…`);
-      await waitFinalizedSuccessful(c as never,hash as never);
+      const grew=async()=>{
+       try{return Number(await readClient().readContract({address:ensureContract(),functionName:"program_count",args:[]}) as number)>before}catch{return false}
+      };
+      await waitFinalizedSuccessful(c as never,hash as never,grew);
       clearDraft();
       setMessage("Finalized with successful GenVM execution. The new program is discoverable from the chain ledger.");
       navigate("/programs");
