@@ -462,6 +462,7 @@ footer { padding-inline: var(--gutter); }
 .form-card textarea::placeholder { color: var(--placeholder); }
 .form-note { margin: 1.6rem 0 1.1rem; color: var(--muted); font-size: .92rem; max-width: 62ch; }
 .form-note--draft { margin: -0.4rem 0 1.1rem; color: var(--placeholder); font: 500 .74rem/1.5 var(--mono); letter-spacing: .02em; }
+.form-block { display: block; margin-top: .5rem; color: var(--amber); }
 .form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
 .form-message { margin: 1rem 0 0; font: 600 .8rem/1.55 var(--mono); color: var(--ink); overflow-wrap: anywhere; min-height: 1.2em; }
 
