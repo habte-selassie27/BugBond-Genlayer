@@ -4,6 +4,25 @@ Public findings. Bound scope. Consensus settlement.
 
 Bugbond is a GenLayer-native public vulnerability-disclosure bounty protocol. A sponsor funds a time-bound, immutable target and scope in GEN. A researcher posts a public disclosure and exact bond. GenLayer validators independently retrieve bounded public evidence, reach a comparative consensus verdict, and deterministic code applies the payout/refund/slash rule.
 
+## Screenshots
+
+Captured from the deployed application at <https://bug-bond-genlayer.vercel.app> on StudioNet. Every table, balance, bond, and verdict below is read from the deployed contract at `0x425327dD3b5216cB7f0581242aaa1F87e202Cb26`; nothing is mocked.
+
+| | |
+|---|---|
+| ![Index](docs/screenshots/01-home.png) | ![Disclosures ledger](docs/screenshots/02-disclosures.png) |
+| *Index: mission, program index, precedent model* | *Disclosures: every bonded disclosure, verdict, lifecycle* |
+| ![Programs ledger](docs/screenshots/03-programs.png) | ![Program dossier](docs/screenshots/07-program-detail.png) |
+| *Programs: live program ledger from the deployed contract* | *Program dossier: pinned target, scope, payout matrix, pool, window* |
+| ![Precedent index](docs/screenshots/04-precedent.png) | ![Settlements ledger](docs/screenshots/05-settlements.png) |
+| *Precedent: settled-valid candidates (distance is never a verdict)* | *Settlements: final payout / refund / slash ledger* |
+| ![New program form](docs/screenshots/06-program-new.png) | ![Four funded programs](docs/screenshots/08-programs-filled.png) |
+| *Create program: target, ref, window, bond policy, exact funding* | *Four sponsored programs, each read back from chain state* |
+| ![Submit report form](docs/screenshots/09-submit-report.png) | ![Disclosure dossier](docs/screenshots/10-disclosure-detail.png) |
+| *Submit: exact bond from contract, draft kept until the write finalizes* | *Disclosure dossier: target, evidence, consensus, settlement* |
+| ![Settled verdict](docs/screenshots/11-disclosure-verdict.png) | |
+| *Terminal verdict with reason, payout, refund, and slash* | |
+
 ## Why GenLayer
 
 A conventional deterministic contract can escrow money, but it cannot inspect a changing public disclosure, a pinned source component, or whether two security reports describe the same root cause. Removing GenLayer from Bugbond would leave an administrator or oracle deciding those facts. Bugbond instead asks validators to fetch the supplied disclosure, a pinned GitHub component when applicable, supplementary evidence, and selected same-program precedent disclosures inside the consensus block.
