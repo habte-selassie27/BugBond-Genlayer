@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { reports, severity, severityTone, type Report } from "@/lib/scope-data";
 import { useChainData } from "@/lib/use-chain-data";
 
@@ -9,16 +10,25 @@ const badge = (t: string, label: string) => (
 const valid = (r: Report) => Number(r.status) === 3;
 
 export default function Precedent() {
+  // The filter drops most rows, so keep the size of the scan itself to explain
+  // an empty table instead of leaving a bare box.
+  const [scanned, setScanned] = useState(0);
   const { items, state, retry } = useChainData<Report>(
-    (onBatch) => reports((batch) => onBatch?.(batch.filter(valid))).then((r) => r.filter(valid)),
+    (onBatch) => reports((batch) => {
+      setScanned(batch.length);
+      onBatch?.(batch.filter(valid));
+    }).then((rows) => {
+      setScanned(rows.length);
+      return rows.filter(valid);
+    }),
     [],
   );
 
   const lede =
-    state === "LOADING" ? "Scanning settled reports for same-program precedent…"
+    state === "LOADING" ? "Scanning the ledger for settled VALID precedent…"
     : state === "RPC ERROR" ? "RPC failure. Retry after checking StudioNet."
-    : state === "EMPTY" ? "No settled VALID reports are available as precedent."
-    : "Settled VALID reports in the same program. Candidates only — never a duplicate decision.";
+    : state === "EMPTY" ? "No settled VALID report exists to offer as precedent."
+    : "Settled VALID reports on the ledger. Candidates only — never a duplicate decision.";
 
   return (
     <main className="ledger-section">
@@ -44,9 +54,13 @@ export default function Precedent() {
       ) : state === "EMPTY" ? (
         <div className="empty-ledger">
           <strong>NO VALID PRECEDENT</strong>
-          <p>Only settled VALID reports from the same program can be offered as precedent candidates.</p>
+          <p>Scanned {scanned} on-chain {scanned === 1 ? "report" : "reports"}; none carries a VALID verdict, and only a settled VALID report can be offered as a precedent candidate.</p>
         </div>
       ) : (
+        <>
+        {scanned > 0 ? (
+          <p className="ledger-count">Scanned {scanned} reports · {items.length} VALID candidates</p>
+        ) : null}
         <div className="table table--precedent">
           <div className="table-inner">
             <div className="table-head" aria-hidden="true">
@@ -66,6 +80,7 @@ export default function Precedent() {
             </div>
           </div>
         </div>
+        </>
       )}
     </main>
   );
